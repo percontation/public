@@ -19,13 +19,15 @@ tc class add dev eth0 parent 1:1 classid 1:11 htb prio 3 rate   1mbps ceil 1gbps
 tc class add dev eth0 parent 1:1 classid 1:12 htb prio 5 rate 3mbit   ceil 12mbps burst 10g cburst 1m
 
 # Add traffic from http/https ports to the throttled traffic
-NGINX_PORTS="`grep '^[ \t]*listen[ \t]\+[0-9]\+' -o /etc/nginx/nginx.conf | tr -d ' \tlisten' | tr '\n' ' '`"
-for PORT in $NGINX_PORTS; do
-tc filter add dev eth0 parent 1: protocol ip prio 1 u32 match ip sport "$(($PORT))" 0xffff flowid 1:12
+{
+	test -r /etc/nginx/nginx.conf && sed -En 's/^[ \t]*listen[ \t]+([0-9]+).*$/\1/p' /etc/nginx/nginx.conf;
+	test -r /etc/lighttpd/lighttpd.conf && sed -En 's/^[ \t]*server.port[ \t]*=[ \t]*([0-9]+).*$/\1/p;s/^[ \t]*\$SERVER\["socket"\][ \t]*==.*:([0-9]+)".*$/\1/p' /etc/lighttpd/lighttpd.conf;
+} | while read PORT
+do tc filter add dev eth0 parent 1: protocol ip prio 1 u32 match ip sport "$(($PORT))" 0xffff flowid 1:12
 done
 
 # Add ssh/scp traffic to the priority traffic
-SSHD_PORT="$((`grep '^[ \t]*Port[ \t]\+[0-9]\+' -o /etc/ssh/sshd_config | tr -d ' \tPort'`))"
+SSHD_PORT="$((`sed -En 's/^[ \t]*Port[ \t]+([0-9]+)/\1/p' /etc/ssh/sshd_config`))"
 tc filter add dev eth0 parent 1: protocol ip prio 1 u32 match ip sport "$SSHD_PORT" 0xffff flowid 1:10
 
 # Priority traffic is interactive or file-transfer like, and not bittorrent or DDOS like.
