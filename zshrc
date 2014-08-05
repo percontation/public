@@ -128,3 +128,13 @@ if [ "`uname`" = 'Darwin' ]; then
 		update_terminal_cwd
 	fi
 fi
+
+if [ "`uname`" = 'Linux' ]; then
+	if which xsel >/dev/null 2>&1; then
+		alias pbcopy='xsel --clipboard --input'
+		alias pbpaste='xsel --clipboard --output'
+	elif which xclip >/dev/null 2>&1; then
+		alias pbcopy='xclip -selection clipboard'
+		alias pbpaste='xclip -selection clipboard -o'
+	fi
+fi
