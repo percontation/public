@@ -59,7 +59,10 @@
 				<key>ActionParameters</key>
 				<dict>
 					<key>COMMAND_STRING</key>
-					<string>find "$@" -exec xattr -d com.apple.quarantine '{}' ';'</string>
+					<string>find "$@" -maxdepth 1 -exec xattr -d com.apple.quarantine '{}' ';'
+find "$@" -mindepth 2 -maxdepth 2 -exec xattr -d com.apple.quarantine '{}' ';'
+find "$@" -mindepth 3 -exec xattr -d com.apple.quarantine '{}' ';'
+</string>
 					<key>CheckedForUserDefaultShell</key>
 					<true/>
 					<key>inputMethod</key>
