@@ -37,6 +37,8 @@ fi
 alias sudo='sudo ' # Trailing space means next arg is alias-expanded
 alias cp='cp -i'
 alias mv='mv -i'
+alias ssh_unsafe="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+alias scp_unsafe="scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 alias cd='filecd'
 filecd() {
 	# This function is sh-compatible; use it anywhere!
