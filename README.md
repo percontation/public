@@ -14,6 +14,10 @@ A slightly janky OS X program for simulating keystrokes. Useful for one-off hack
 
 A Safari extension for undoing the silliness applied to Google and Facebook links. This formerly fixed issues preventing Safari's history from working correctly, but now it just nullfies some Google and Facebook tracking.
 
+## Finder Slob
+
+A ~/Library/LaunchAgents agent that periodically closes excess Finder windows.
+
 ## portup.sh
 
 A script to upgrade MacPorts ports. The primary feature is mounting a ramdisk to build on.

@@ -10,7 +10,7 @@ MPBUILD="/opt/local/var/macports/build"
 
 # Regex matching ports to be installed bin-only (without 'all' flag),
 # or built off the ramdisk (with 'all' flag).
-LARGE='(llvm-.*)|(clang-.*)|(gcc..)|(pypy)|(gtk.)|(boost)|(rust)'
+LARGE='llvm-.*|clang-.*|gcc..|pypy|gtk.|boost|rust'
 
 # Size of ramdisk in MB; must be large enough to build everything
 # not in the above large list!
@@ -67,6 +67,7 @@ if [ -n "$(echo "$BINONLY" | tr -d ' ')" ]; then
 		caffeinate -s port -pcu upgrade $BINONLY
 	else
 		# Binary only in the default case
+		echo "Don't mind errors in the following:"
 		caffeinate -s port -pbcu upgrade $BINONLY
 	fi
 fi

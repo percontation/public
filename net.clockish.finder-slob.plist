@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>net.clockish.finder-slob</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>osascript</string>
+		<string>-e</string>
+		<string>
+tell application &quot;System Events&quot; to set finderRunning to (name of processes) contains &quot;Finder&quot;
+if finderRunning then tell application &quot;Finder&quot;
+	set finderWindows to every Finder window
+	if (count finderWindows) > 3 then
+		set seen to {&quot;&quot;}
+		repeat with win in (items 1 thru 3 of finderWindows)
+			set seen to seen &amp; {folder of win as string}
+		end repeat
+		repeat with win in (items 4 thru end of finderWindows)
+			set fold to folder of win
+			if seen contains (fold as string) or ¬
+				fold is computer container or ¬
+				fold is home or ¬
+				fold is startup disk or ¬
+				fold is desktop or ¬
+				fold is trash then
+				close win
+			else
+				set seen to seen &amp; {fold as string}
+			end if
+		end repeat
+	end if
+end tell
+		</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StartInterval</key>
+	<integer>600</integer>
+</dict>
+</plist>

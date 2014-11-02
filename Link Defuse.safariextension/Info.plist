@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Ryan Goulden</string>
 	<key>Builder Version</key>
-	<string>9537.74.9</string>
+	<string>10600.1.25</string>
 	<key>CFBundleDisplayName</key>
 	<string>Link Defuse</string>
 	<key>CFBundleIdentifier</key>
@@ -30,6 +30,8 @@
 	</dict>
 	<key>Description</key>
 	<string>Remove silliness on links from Google &amp; Facebook</string>
+	<key>DeveloperIdentifier</key>
+	<string>NNF8F6RJBK</string>
 	<key>ExtensionInfoDictionaryVersion</key>
 	<string>1.0</string>
 	<key>Permissions</key>

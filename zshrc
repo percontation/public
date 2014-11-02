@@ -21,7 +21,7 @@ export PAGER='less -i'
 # Colors!
 if [ -z "$NOCOLOR" ]; then
 	# It would be super nice if everything listened to the CLICOLOR
-	# env variable... instead of just BSD ls (-.-)
+	# env variable... instead of just BSD ls (._.)
 	export CLICOLOR=1
 	export GCC_COLORS=1
 	alias egrep='egrep --color=auto'
