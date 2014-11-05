@@ -1,0 +1,4 @@
+Polytone Dark is adapted from the Textual 5 Simplified Dark theme, and
+is subject to the applicable copyrights.
+
+Any original element of Polytone Dark is public domain.

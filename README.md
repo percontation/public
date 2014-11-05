@@ -1,6 +1,6 @@
 # public
 
-Misc scripts, mostly the mundane products of me living on OS X.
+Misc scripts, mostly OS X related tweaks.
 
 ## arbnoatime
 
@@ -25,6 +25,10 @@ A script to upgrade MacPorts ports. The primary feature is mounting a ramdisk to
 ## tc_limiting.sh
 
 A script that reconfigures Linux qdiscs to a particular configuration, that throttles outbound nginx traffic.
+
+## Themes
+
+Themes and styles that I've modified. I'm picky about colors.
 
 ## Unquarantine.workflow
 
