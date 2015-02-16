@@ -1,39 +1,50 @@
-# public
+public
+======
 
-Misc scripts, mostly OS X related tweaks.
+Stuff I wish I never needed to write.
 
-## arbnoatime
+OS X
+----
 
-An OS X launch daemon that remounts all volumes with noatime. Some people claim various benefits to SSD or rotational media.
+Best OS.
 
-## keystroke
+#### arbnoatime
 
-A slightly janky OS X program for simulating keystrokes. Useful for one-off hacks, and works well with scripts.
+An OS X launch daemon that remounts all volumes with noatime.
 
-## Link Defuse
+#### keystroke
 
-A Safari extension for undoing the silliness applied to Google and Facebook links. This formerly fixed issues preventing Safari's history from working correctly, but now it just nullfies some Google and Facebook tracking.
+A slightly janky OS X program for simulating keystrokes. Useful for hacks. Has bugs I'll probably never bother to fix.
 
-## Finder Slob
+#### Link Defuse
+
+A Safari extension for unscrewing Google and Facebook links. It used to be necessary to keep Safari history sane, and might still nix a bit of Google & Facebook tracking.
+
+#### Finder Slob
 
 A ~/Library/LaunchAgents agent that periodically closes excess Finder windows.
 
-## portup.sh
+#### portup.sh
 
 A script to upgrade MacPorts ports. The primary feature is mounting a ramdisk to build on.
 
-## tc_limiting.sh
+#### Unquarantine.workflow
+
+An OS X ~/Library/Services script to remove the quarantined xattr from files & directory trees. Useful for mollifying Gatekeeper by removing the "downloaded" stigma from .app bundles.
+
+Linux
+-----
+
+Rather, "not just OS X".
+
+#### tc_limiting.sh
 
 A script that reconfigures Linux qdiscs to a particular configuration, that throttles outbound nginx traffic.
 
-## Themes
+#### tile.py
 
-Themes and styles that I've modified. I'm picky about colors.
+A script for manually tiling X windows. You bind various invocations of the script to hotkeys to send the frontmost window to a particular subdivision of the screen. Works for xfwm4 (i.e. XFCE) and possibly others.
 
-## Unquarantine.workflow
+#### zshrc
 
-An OS X ~/Library/Services script to remove the quarantined xattr from files & directory trees. (This xattr is what makes Gatekeeper, in its default configuration, refuse to launch unsigned downloaded applications).
-
-## zshrc
-
-My more-or-less cross platform rc file. Mostly not zsh specific; I don't zsh too hard. There's one or two fun tricks in there.
+More-or-less cross platform rc file. Pretty old school, and mostly not zsh specific.

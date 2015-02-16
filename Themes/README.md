@@ -1,6 +1,6 @@
 # Themes
 
-Just a couple Mac things for now.
+I like white-on-black and the LCh color space :P
 
 ## Polytone Dark ([Textual](http://www.codeux.com/textual/))
 

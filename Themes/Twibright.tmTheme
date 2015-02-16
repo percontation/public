@@ -9,13 +9,13 @@
 	<key>gutterSettings</key>
 	<dict>
 		<key>background</key>
-		<string>#2F2F31</string>
+		<string>#202020</string>
 		<key>divider</key>
 		<string>#414143</string>
 		<key>foreground</key>
 		<string>#A9A9A9</string>
 		<key>selectionBackground</key>
-		<string>#414143</string>
+		<string>#383838</string>
 		<key>selectionBorder</key>
 		<string>#484848</string>
 		<key>selectionForeground</key>
@@ -31,7 +31,7 @@
 			<key>settings</key>
 			<dict>
 				<key>background</key>
-				<string>#181818</string>
+				<string>#101010</string>
 				<key>caret</key>
 				<string>#C2C2C2</string>
 				<key>foreground</key>
@@ -41,7 +41,7 @@
 				<key>lineHighlight</key>
 				<string>#FFFFFF08</string>
 				<key>selection</key>
-				<string>#48A0E830</string>
+				<string>#58B0F080</string>
 			</dict>
 		</dict>
 		<dict>
