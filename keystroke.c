@@ -1,13 +1,17 @@
+#!/bin/sh
+//bin/sh -c ''; set -e; OUT="./`basename "$0" .c`"; tail -n +3 "$0" | clang -x c - -o "$OUT" -framework ApplicationServices && exec "$OUT" "$@"; exit $?
 #include <ApplicationServices/ApplicationServices.h>
 #include <Carbon/Carbon.h>
 #include <string.h>
 #include <stdint.h>
 #include <time.h>
 
+CGEventFlags flags_state = 0;
+bool caps_lock_state = false;
 useconds_t keylag = 1000;
 useconds_t waitkp = 10000;
 
-void usage(int exitcode) {
+void __attribute__((noreturn)) usage(int exitcode) {
 	fflush(stderr);
 	fprintf(stderr, "Usage: keystroke [-e keys] [-c code1,code2,...] [-s sleep]\n");
 	fprintf(stderr, "         [-m mod1,mod2,... -? arg] [-d(e|c) arg] [-u(e|c) arg] [-ud] [-uu]\n");
@@ -15,23 +19,24 @@ void usage(int exitcode) {
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Utility for simulating keystrokes. Assumes a US keyboard layout, sorry.\n");
 	fprintf(stderr, "Args are commands processed from left to right.\n");
-	fprintf(stderr, "\t-c codes  Presses the comma-delimited numeric key codes, or key names.\n");
-	fprintf(stderr, "\t            The HIToolbox Events.h key names, sans prefixes, work, along\n");
-	fprintf(stderr, "\t            with some abbreviations. Case is insensitive.\n");
+	fprintf(stderr, "\t-c codes  Press the comma-delimited numeric key codes, or key names.\n");
+	fprintf(stderr, "\t            The HIToolbox Events.h key names, sans prefixes, work,\n");
+	fprintf(stderr, "\t            along with some abbreviations. Case is insensitive.\n");
 	fprintf(stderr, "\t-e string Types out the characters in the string, with delays.\n");
-	fprintf(stderr, "\t-l num    Change the length of time between a key down and key up event to\n");
-	fprintf(stderr, "\t            num milliseconds. The default is %llums.\n", (unsigned long long)keylag);
-	fprintf(stderr, "\t-m mod    Holds down the comma delimited key codes for the next argument.\n");
-	fprintf(stderr, "\t            Useful for modifier keys.\n");
-	fprintf(stderr, "\t-p pid    From now on, only direct events to the given process.\n");
-	fprintf(stderr, "\t            Use -p 0 to restore sending to any process.\n");
+	fprintf(stderr, "\t-l num    Change the length of time between a key down and key up\n");
+	fprintf(stderr, "\t            event to num milliseconds. The default is %.1fms.\n", keylag/1000.0);
+	fprintf(stderr, "\t-m mod    Holds down the comma delimited key codes for the next\n");
+	fprintf(stderr, "\t            argument. Intended for modifier keys.\n");
+	fprintf(stderr, "\t-p pid    For subsequent commands, direct events to the given process.\n");
+	fprintf(stderr, "\t            Using -p 0 will restore the default global behavior.\n");
 	fprintf(stderr, "\t-s num    Sleep for num seconds before moving on.\n");
-	fprintf(stderr, "\t-w num    Change the delay between key presses to num milliseconds. The\n");
-	fprintf(stderr, "\t            delay is after each press in '-e' or '-c'. The default is %llu.\n", (unsigned long long)waitkp);
-	fprintf(stderr, "\t-d? arg   Prefixing an arg with d sends just a key down event.\n");
-	fprintf(stderr, "\t-u? arg   Prefixing an arg with u sends just a key up event.\n");
-	fprintf(stderr, "\t-ud       Lift the keys held down by the previous -d? action. Repeating\n");
-	fprintf(stderr, "\t            this works like an undo-stack.\n");
+	fprintf(stderr, "\t-w num    Change the delay between key presses to num milliseconds.\n");
+	fprintf(stderr, "\t            This delay occurs after each press in '-e' or '-c'.\n");
+	fprintf(stderr, "\t            The default is %.1fms.\n", waitkp/1000.0);
+	fprintf(stderr, "\t-d? arg   Prefixing -e or -c with d sends just key down events.\n");
+	fprintf(stderr, "\t-u? arg   Prefixing -e or -c with u sends just key up events.\n");
+	fprintf(stderr, "\t-ud       Lift the keys held down by the previous -d? action.\n");
+	fprintf(stderr, "\t            Repeating this works like an undo-stack.\n");
 	fprintf(stderr, "\t-uu       Release all held keys.\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Notes:\n");
@@ -39,6 +44,7 @@ void usage(int exitcode) {
 	fprintf(stderr, "while holding down the keys. Holding keys down for a brief period can be done\n");
 	fprintf(stderr, "with -m codes -s 1.5\n");
 	exit(exitcode);
+	__builtin_unreachable();
 }
 
 int fsleep(double seconds) {
@@ -350,26 +356,41 @@ void postEvent(CGEventRef event) {
 	}
 }
 
-void performDown(struct KeyCode kc) {
-	if(kc.flags & KeyCodeBeep) putchar('\a');
-	if(kc.code == 0xFFFF) return;
-	CGEventRef event = CGEventCreateKeyboardEvent(NULL, kc.code, false);
-	if(kc.flags & KeyCodeShift) {
-		postEvent(shiftDnEvent);
-		usleep(keylag/2);
+void doKeyboardEvent(CGKeyCode virtualKey, bool keyDown) {
+	if(virtualKey == 0xFFFF) return;
+	CGEventRef event = CGEventCreateKeyboardEvent(NULL, virtualKey, keyDown);
+#define X(mask, set) do { if(set) flags_state |= mask; else flags_state &= ~(mask); } while(0)
+	switch(virtualKey) {
+		default: break;
+		case kVK_Shift: X(kCGEventFlagMaskShift, keyDown); break;
+		case kVK_Control: X(kCGEventFlagMaskControl, keyDown); break;
+		case kVK_Option: X(kCGEventFlagMaskAlternate, keyDown); break;
+		case kVK_Command: X(kCGEventFlagMaskCommand, keyDown); break;
+		case kVK_Function: X(kCGEventFlagMaskSecondaryFn, keyDown); break;
+		case kVK_CapsLock:
+			if(keyDown) {
+				caps_lock_state = !caps_lock_state;
+				X(kCGEventFlagMaskAlphaShift, caps_lock_state);
+			}
+			break;
+		//case ???: X(kCGEventFlagMaskHelp, ???); break;
+		//case ???: X(kCGEventFlagMaskNumericPad, ???); break;
 	}
+#undef X
+	CGEventSetFlags(event, flags_state);
 	postEvent(event);
 	CFRelease(event);
 }
 
+void performDown(struct KeyCode kc) {
+	if(kc.flags & KeyCodeBeep) putchar('\a');
+	if(kc.flags & KeyCodeShift) doKeyboardEvent(kVK_Shift, true);
+	doKeyboardEvent(kc.code, true);
+}
+
 void performUp(struct KeyCode kc) {
-	if(kc.code == 0xFFFF) return;
-	CGEventRef event = CGEventCreateKeyboardEvent(NULL, kc.code, true);
-	postEvent(event);
-	CFRelease(event);
-	if(kc.flags & KeyCodeShift) {
-		postEvent(shiftUpEvent);
-	}
+	doKeyboardEvent(kc.code, false);
+	if(kc.flags & KeyCodeShift) doKeyboardEvent(kVK_Shift, false);
 }
 
 enum CommandMode {
@@ -386,9 +407,9 @@ void commandC(char *cmd, enum CommandMode mode) {
 			struct KeyCode kc = {0,0};
 			kc.code = isdigit(token[0]) ? strtol(token, NULL, 0) : keyCodeForName(token);
 			switch(mode) {
-				case COMMAND_NORMAL: performDown(kc); usleep(keylag); performUp(kc); usleep(keylag); break;
-				case COMMAND_DOWN:   performDown(kc); usleep(keylag); break;
-				case COMMAND_UP:     performUp(kc); usleep(keylag); break;
+				case COMMAND_NORMAL: performDown(kc); usleep(keylag); performUp(kc); break;
+				case COMMAND_DOWN:   performDown(kc); break;
+				case COMMAND_UP:     performUp(kc); break;
 			}
 		}
 		usleep(waitkp);
@@ -401,9 +422,9 @@ void commandE(char *cmd, enum CommandMode mode) {
 	for(char *c = cmd; *c != 0; c++) {
 		struct KeyCode kc = keyCodeForAscii(*c);
 		switch(mode) {
-			case COMMAND_NORMAL: performDown(kc); usleep(keylag); performUp(kc); usleep(keylag); break;
-			case COMMAND_DOWN:   performDown(kc); usleep(keylag); break;
-			case COMMAND_UP:     performUp(kc); usleep(keylag); break;
+			case COMMAND_NORMAL: performDown(kc); usleep(keylag); performUp(kc); break;
+			case COMMAND_DOWN:   performDown(kc); break;
+			case COMMAND_UP:     performUp(kc); break;
 		}
 		usleep(waitkp);
 	}
@@ -421,6 +442,10 @@ static void error_expected_arg(char *flag) {
 
 int main(int argc, char *argv[]) {
 	if(argc <= 1) usage(64);
+	
+	void (**downmap)(char *cmd, enum CommandMode mode);
+	downmap = calloc(argc, sizeof(downmap[0]));
+	int mdown = -1;
 	
 	for(int i = 1; i < argc; i++) {
 		if(argv[i][0] != '-')
@@ -460,7 +485,10 @@ int main(int argc, char *argv[]) {
 				if(pid == 0) {
 					eventpsn.highLongOfPSN = 0;
 					eventpsn.lowLongOfPSN = 0;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 				} else if(GetProcessForPID(pid, &eventpsn)) {
+#pragma clang diagnostic pop
 					fprintf(stderr, "couldn't get process for pid %ld\n", pid);
 					exit(-1);
 				}
@@ -469,8 +497,8 @@ int main(int argc, char *argv[]) {
 			case 'm':
 				if(argv[i][2] != 0) error_unrecognized_flag(argv[i]);
 				if(++i >= argc) error_expected_arg(argv[i-1]);
-				fprintf(stderr, "-m not supported yet, sorry\n");
-				exit(1);
+				commandC(argv[i], COMMAND_DOWN);
+				mdown = i;
 				break;
 			case 'd': {
 				switch(argv[i][2]) {
@@ -479,11 +507,13 @@ int main(int argc, char *argv[]) {
 						if(argv[i][3] != 0) error_unrecognized_flag(argv[i]);
 						if(++i >= argc) error_expected_arg(argv[i-1]);
 						commandE(argv[i], COMMAND_DOWN);
+						downmap[i] = &commandE;
 						break;
 					case 'c': 
 						if(argv[i][3] != 0) error_unrecognized_flag(argv[i]);
 						if(++i >= argc) error_expected_arg(argv[i-1]);
 						commandC(argv[i], COMMAND_DOWN);
+						downmap[i] = &commandC;
 						break;
 				}
 				break;
@@ -499,22 +529,37 @@ int main(int argc, char *argv[]) {
 					case 'c':
 						if(argv[i][3] != 0) error_unrecognized_flag(argv[i]);
 						if(++i >= argc) error_expected_arg(argv[i-1]);
-						commandC(argv[i], COMMAND_UP); break;
+						commandC(argv[i], COMMAND_UP);
+						break;
 					case 'u': {
 						if(argv[i][3] != 0) error_unrecognized_flag(argv[i]);
-						fprintf(stderr, "-uu not supported yet, sorry\n");
-						exit(1);
+						for(int j = 1; j < i; j++) {
+							if(downmap[j]) {
+								downmap[j](argv[j], COMMAND_UP);
+								downmap[j] = NULL;
+							}
+						}
+						break;
 					}
 					case 'd': {
 						if(argv[i][3] != 0) error_unrecognized_flag(argv[i]);
-						fprintf(stderr, "-ud not supported yet, sorry\n");
-						exit(1);
+						for(int j = i-1; j > 0; j--) {
+							if(downmap[j]) {
+								downmap[j](argv[j], COMMAND_UP);
+								downmap[j] = NULL;
+								break;
+							}
+						}
+						break;
 					}
 				}
 				break;
 			}
 		}
+		if(mdown > 0 && i > mdown) {
+			commandC(argv[mdown], COMMAND_UP);
+			mdown = -1;
+		}
 	}
-	
 	return 0;
 }

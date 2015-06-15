@@ -14,7 +14,7 @@ An OS X launch daemon that remounts all volumes with noatime.
 
 #### keystroke
 
-A slightly janky OS X program for simulating keystrokes. Useful for hacks. Has bugs I'll probably never bother to fix.
+A slightly janky OS X program for simulating keystrokes. Useful for hacks.
 
 #### Link Defuse
 
