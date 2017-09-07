@@ -10,7 +10,7 @@ MPBUILD="/opt/local/var/macports/build"
 
 # Regex matching ports to be installed bin-only (without 'all' flag),
 # or built off the ramdisk (with 'all' flag).
-LARGE='llvm-.*|clang-.*|gcc..|pypy|gtk.|boost|rust'
+LARGE='llvm-.*|clang-.*|gcc4.|gcc5|pypy|gtk.|boost|rust|qt(5|4-mac)-?.*|vtk'
 
 # Size of ramdisk in MB; must be large enough to build everything
 # not in the above large list!
@@ -55,7 +55,7 @@ if [ -n "$(echo "$UPDATE" | tr -d ' ')" ]; then
 		trap "umount -f '$RAMDISK'; hdiutil detach '$RAMDISK'; exit" 0 1 2 15
 		newfs_hfs -sv "macports build" "$RAMDISK" && \
 		mount -t hfs -wo nodev,union,nobrowse "$RAMDISK" "$MPBUILD" && \
-		caffeinate -s port -pcun upgrade $UPDATE
+		caffeinate -s port -Npcun upgrade $UPDATE
 	) || echo 'Failed to upgrade ports. Try again maybe?'
 fi
 
@@ -64,11 +64,11 @@ if [ -n "$(echo "$BINONLY" | tr -d ' ')" ]; then
 	echo "Will update: $BINONLY"
 	if [ -n "$1" ]; then
 		# Not binary only when given the 'all' flag or a port-regex.
-		caffeinate -s port -pcu upgrade $BINONLY
+		caffeinate -s port -RNpcu upgrade $BINONLY
 	else
 		# Binary only in the default case
 		echo "Don't mind errors in the following:"
-		caffeinate -s port -pbcu upgrade $BINONLY
+		caffeinate -s port -Npbcu upgrade $BINONLY
 	fi
 fi
 
